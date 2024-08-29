@@ -1,0 +1,24 @@
+{
+  "name": "laberu-backend",
+  "version": "1.0.0",
+  "description": "Backend for Laberu",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./bin/www",
+    "dev": "nodemon ./bin/www ",
+    "debug": "node --inspect ./bin/www"
+  },
+  "dependencies": {
+    "@primer/css": "17.0.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "^4.19.2",
+    "http-errors": "~1.6.3",
+    "jade": "^0.29.0",
+    "morgan": "~1.9.1"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
