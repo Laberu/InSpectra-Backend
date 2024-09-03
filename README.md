@@ -9,20 +9,20 @@ It aims to address the challenges users face in identifying and tracking objects
 1. Run ``` npm install ``` to download dependencies of this project.
 2. Run ```npm start``` to start applocation
 or 
-1. Run ```docker build -t myapp:prod .``` to build images for docker.
-2. Run ```docker run -p 3000:3000 myapp:prod``` to run the container.
+1. Run ```docker build -t laberu:prod .``` to build images for docker.
+2. Run ```docker run -p 3000:3000 laberu:prod``` to run the container.
 
 ### dev mode
 1. ```npm run dev```
 or 
-1. Run ```docker build -t myapp:dev -f Dockerfile.dev .``` to build images for docker.
-2. Run ```docker run -p 3000:3000 -v $(pwd):/usr/src/app myapp:dev``` to run the container.
+1. Run ```docker build -t laberu:dev -f Dockerfile.dev .``` to build images for docker.
+2. Run ```docker run -p 3000:3000 -v $(pwd):/usr/src/app laberu:dev``` to run the container.
 
 ### debug mode
 1. ```npm run debug```
 or
-1. Run ```docker build -t myapp:debug -f Dockerfile.dev .``` to build images for docker.
-2.Run ```docker run -p 3000:3000 -p 9229:9229 -v $(pwd):/usr/src/app myapp:debug``` to run the container.
+1. Run ```docker build -t laberu:debug -f Dockerfile.dev .``` to build images for docker.
+2.Run ```docker run -p 3000:3000 -p 9229:9229 -v $(pwd):/usr/src/app laberu:debug``` to run the container.
 
 The server will run on ```localhost:3000```
   
