@@ -1,6 +1,6 @@
 const { verify } = require("jsonwebtoken");
 const User = require("../models/user");
-const protected = async (req, res, next) => {
+const isProtected = async (req, res, next) => {
   // get the token from the header
   const authorization = req.headers["authorization"];
   // if we don't have a token, return error
@@ -39,4 +39,4 @@ const protected = async (req, res, next) => {
   // call the next middleware
   next();
 };
-module.exports = { protected };
+module.exports = { isProtected };

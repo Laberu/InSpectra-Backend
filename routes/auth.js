@@ -3,7 +3,7 @@ var router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require("../models/user");
 const { hash } = require("bcryptjs");
-const { protected } = require("../utils/protected");
+const { isProtected } = require("../utils/protected");
 const { verify } = require("jsonwebtoken");
 const {
     createAccessToken,
@@ -170,7 +170,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.get("/protected", protected, async (req, res) => {
+router.get("/protected", isProtected, async (req, res) => {
     try {
       // if user exists in the request, send the data
       if (req.user)
