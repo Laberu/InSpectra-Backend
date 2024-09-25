@@ -94,3 +94,6 @@ coverage/
 
 # Snyk
 .snyk
+
+# Test file js
+testemail.js
