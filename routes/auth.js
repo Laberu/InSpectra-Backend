@@ -197,16 +197,18 @@ router.post("/send-password-reset-email", async (req, res) => {
     try {
         // get the user from the request body
         const { email } = req.body;
-        // find the user by email
+        // find the user by email        
         const user = await User.findOne({ email });
         // if the user doesn't exist, return error
+        // console.log(user);
+        
         if (!user)
             return res.status(500).json({
             message: "User doesn't exist! 😢",
             type: "error",
             });
         // create a password reset token
-        const token = createPasswordResetToken({ ...user, createdAt: Date.now() });
+        const token = createPasswordResetToken({ _id: user._id, email: user.email , password:user.password});
         // create the password reset url
         const url = createPasswordResetUrl(user._id, token);
         // send the email
@@ -216,12 +218,13 @@ router.post("/send-password-reset-email", async (req, res) => {
             return res.status(500).json({
                 message: "Error sending email! 😢",
                 type: "error",
+                error: err.message
             });
             return res.json({
                 message: "Password reset link has been sent to your email! 📧",
                 type: "success",
             });
-        });
+        });        
     } catch (error) {
         res.status(500).json({
             type: "error",
@@ -233,26 +236,29 @@ router.post("/send-password-reset-email", async (req, res) => {
 
 router.post("/reset-password/:id/:token", async (req, res) => {
     try {
-        // get the user details from the url
         const { id, token } = req.params;
-        // get the new password the request body
         const { newPassword } = req.body;
         // find the user by id
         const user = await User.findById(id);
-        // if the user doesn't exist, return error
+        // if the user doesn't exist, return error        
         if (!user)
             return res.status(500).json({
             message: "User doesn't exist! 😢",
             type: "error",
             });
+
         // verify if the token is valid
-        const isValid = verify(token, user.password);
-        // if the password reset token is invalid, return error
-        if (!isValid)
+        let isValid;
+        try {
+            isValid = verify(token, user.password);
+        } catch (error) {
+            // If verification fails, return invalid token error
             return res.status(500).json({
                 message: "Invalid token! 😢",
                 type: "error",
             });
+        }
+
         // set the user's password to the new password
         user.password = await hash(newPassword, 10);
         // save the user
