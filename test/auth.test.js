@@ -173,7 +173,7 @@ describe('Auth Routes', () => {
         email: 'reset@example.com'
       });
 
-    //   expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(200);
       expect(response.body.message).toBe("Password reset link has been sent to your email! 📧");
     });
 
@@ -189,29 +189,31 @@ describe('Auth Routes', () => {
 
   describe('POST /auth/reset-password/:id/:token', () => {
     it('should reset the password if token is valid', async () => {
-      const passwordHash = await hash('password123', 10);
-      const user = await User.create({ email: 'reset-password@example.com', password: passwordHash });
-      
-      const resetToken = jwt.sign({ id: user._id }, user.password, { expiresIn: '1h' });
-      const response = await request(app).post(`/auth/reset-password/${user._id}/${resetToken}`).send({
-        newPassword: 'newpassword123'
-      });
-
-    //   expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("Email sent! 📧");
+        const passwordHash = await hash('password123', 10);
+        const user = await User.create({ email: 'reset-password@example.com', password: passwordHash });
+        const email = user.email
+        // Create a reset token using the secret from environment variables
+        const resetToken = jwt.sign({ id: user._id, email }, passwordHash, { expiresIn: '1h' });
+        
+        const response = await request(app).post(`/auth/reset-password/${user._id}/${resetToken}`).send({
+            newPassword: 'newpassword123'
+        });
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("Email sent! 📧");
     });
 
     it('should return error if token is invalid', async () => {
-      const passwordHash = await hash('password123', 10);
-      const user = await User.create({ email: 'invalid-token@example.com', password: passwordHash });
-      
-      const response = await request(app).post(`/auth/reset-password/${user._id}/invalidtoken`).send({
-        newPassword: 'newpassword123'
-      });
+        const passwordHash = await hash('password123', 10);
+        const user = await User.create({ email: 'invalid-token@example.com', password: passwordHash });
 
-      expect(response.statusCode).toBe(500);
-      expect(response.body.message).toBe("Invalid token! 😢");
+        const response = await request(app).post(`/auth/reset-password/${user._id}/invalidtoken`).send({
+            newPassword: 'newpassword123'
+        });
+
+        expect(response.statusCode).toBe(500);
+        expect(response.body.message).toBe("Invalid token! 😢");
     });
-  });
+});
+
 
 });
