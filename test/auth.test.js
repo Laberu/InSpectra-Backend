@@ -1,3 +1,4 @@
+require("dotenv").config();
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -68,9 +69,9 @@ describe('Auth Routes', () => {
         password: 'password123'
       });
 
-    //   expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(200);
       expect(response.headers['set-cookie']).toBeDefined();
-      expect(response.body).toHaveProperty('accessToken');
+      expect(response.body).toHaveProperty('accesstoken');
     });
 
     it('should return error if user does not exist', async () => {
@@ -132,24 +133,37 @@ describe('Auth Routes', () => {
 
   describe('GET /auth/protected', () => {
     it('should return success message if user is authenticated', async () => {
+      // Hash password and create user
       const passwordHash = await hash('password123', 10);
       const user = await User.create({ email: 'protected@example.com', password: passwordHash });
       
+      // Generate refresh token and update user in DB
       const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
       await User.findByIdAndUpdate(user._id, { refreshtoken: refreshToken });
 
-      const signinResponse = await request(app).post('/auth/signin').send({
-        email: 'protected@example.com',
-        password: 'password123'
-      });
+      // Sign in to get access token
+      const signinResponse = await request(app)
+        .post('/auth/signin')
+        .send({
+          email: 'protected@example.com',
+          password: 'password123'
+        });
 
-      const accessToken = signinResponse.body.accessToken;
-      const response = await request(app).get('/auth/protected').set('Authorization', `Bearer ${accessToken}`);
+      // Ensure access token is received (fix case issue if necessary)
+      const accessToken = signinResponse.body.accessToken || signinResponse.body.accesstoken;
+      expect(accessToken).toBeDefined(); // Add this check to ensure the token is returned
 
+      // Send request to protected route using the access token in Authorization header
+      const response = await request(app)
+        .get('/auth/protected')
+        .set('Authorization', `Bearer ${accessToken}`);  // Set access token in Authorization header
+
+      // Validate response
       expect(response.statusCode).toBe(200);
       expect(response.body.message).toBe("You are logged in! 🤗");
     });
   });
+
 
   describe('POST /auth/send-password-reset-email', () => {
     it('should send password reset email', async () => {
