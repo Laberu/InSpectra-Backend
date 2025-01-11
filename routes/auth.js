@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+const passport = require('passport');
 const bcrypt = require('bcryptjs');
 const User = require("../models/user");
 const { hash } = require("bcryptjs");
@@ -101,6 +102,52 @@ router.post("/signin", async (req, res) => {
     }
 });
 
+// Google OAuth Login Route
+router.get('/google', passport.authenticate('google', {
+    scope: ['profile', 'email']
+  }));
+  
+  // Google OAuth Callback Route
+  router.get('/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }), 
+    async function(req, res) {
+      try {
+        const profile = req.user;
+        
+        // Check if the user exists based on the Google profile ID or email
+        let user = await User.findOne({ email: profile.emails[0].value });
+  
+        // If the user doesn't exist, create a new one
+        if (!user) {
+          user = new User({
+            email: profile.emails[0].value,
+            googleId: profile.id,  // Save Google ID
+            name: profile.displayName
+          });
+          await user.save();
+        }
+  
+        // Generate Access and Refresh Tokens
+        const accessToken = createAccessToken(user._id);
+        const refreshToken = createRefreshToken(user._id);
+  
+        // Update the refresh token in the database
+        user.refreshtoken = refreshToken;
+        await user.save();
+  
+        // Send the tokens to the client
+        sendRefreshToken(res, refreshToken);
+        sendAccessToken(req, res, accessToken);
+      } catch (error) {
+        res.status(500).json({
+          type: "error",
+          message: "Error during Google OAuth!",
+          error,
+        });
+      }
+    }
+  );
+
 router.post("/logout", (_req, res) => {
     // clear cookies
     res.clearCookie("refreshtoken");
@@ -113,13 +160,12 @@ router.post("/logout", (_req, res) => {
 router.post("/", async (req, res) => {
     try {
         const { refreshtoken } = req.cookies;
-        // if we don't have a refresh token, return error
         if (!refreshtoken)
-        return res.status(500).json({
+          return res.status(500).json({
             message: "No refresh token! 🤔",
             type: "error",
         });
-      // if we have a refresh token, you have to verify it
+
         let id;
         try {
             id = verify(refreshtoken, process.env.REFRESH_TOKEN_SECRET).id;
@@ -129,32 +175,17 @@ router.post("/", async (req, res) => {
                 type: "error",
             });
         }
-        // if the refresh token is invalid, return error
-        if (!id)
-            return res.status(500).json({
-            message: "Invalid refresh token! 🤔",
-            type: "error",
-            });
-        // if the refresh token is valid, check if the user exists
+
         const user = await User.findById(id);
-        // if the user doesn't exist, return error
-        if (!user)
-            return res.status(500).json({
-                message: "User doesn't exist! 😢",
-                type: "error",
-            });
-        // if the user exists, check if the refresh token is correct. return error if it is incorrect.
-        if (user.refreshtoken !== refreshtoken)
+        if (!user || user.refreshtoken !== refreshtoken)
             return res.status(500).json({
             message: "Invalid refresh token! 🤔",
             type: "error",
-            });
-        // if the refresh token is correct, create the new tokens
+        });
+
         const accessToken = createAccessToken(user._id);
         const refreshToken = createRefreshToken(user._id);
-        // update the refresh token in the database
         user.refreshtoken = refreshToken;
-        // send the new tokes as response
         sendRefreshToken(res, refreshToken);
         return res.json({
             message: "Refreshed successfully! 🤗",
@@ -172,14 +203,12 @@ router.post("/", async (req, res) => {
 
 router.get("/protected", isProtected, async (req, res) => {
     try {
-      // if user exists in the request, send the data
       if (req.user)
         return res.json({
           message: "You are logged in! 🤗",
           type: "success",
           user: req.user,
         });
-      // if user doesn't exist, return error
       return res.status(500).json({
         message: "You are not logged in! 😢",
         type: "error",
