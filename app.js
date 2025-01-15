@@ -5,8 +5,7 @@ const session = require("express-session");
 const indexRouter = require("./routes/index.js");
 const authRouter = require("./routes/auth.js");
 const mongoose = require("mongoose");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const passport = require('passport');
 const path = require("path");
 
 // Connecting to the database
@@ -25,27 +24,6 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: false } // If you're using HTTPS, set this to true
 }));
-
-// Set up Google OAuth strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL
-  },
-  function (accessToken, refreshToken, profile, done) {
-    // Here you would usually find or create a user in your database
-    return done(null, profile);
-  }
-));
-
-// Passport serialization and deserialization
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function (user, done) {
-  done(null, user);
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
