@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const passport = require('passport');
+const passport = require('../utils/passport');
 const bcrypt = require('bcryptjs');
 const User = require("../models/user");
 const { hash } = require("bcryptjs");
@@ -24,7 +24,7 @@ const {
 router.post("/signup", async (req, res) => {
     try {
       const { email, password } = req.body;
-      // 1. check if user already exists
+      // check if user already exists
       const user = await User.findOne({ email: email });
   
       // if user exists already, return error
@@ -107,46 +107,51 @@ router.get('/google', passport.authenticate('google', {
     scope: ['profile', 'email']
   }));
   
-  // Google OAuth Callback Route
-  router.get('/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }), 
-    async function(req, res) {
-      try {
-        const profile = req.user;
-        
-        // Check if the user exists based on the Google profile ID or email
-        let user = await User.findOne({ email: profile.emails[0].value });
-  
+// Google OAuth Callback Route
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }), 
+  async function(req, res) {
+    try {
+
+      const { email, googleId } = req.user;      
+
+      let user = await User.findOne({ googleId });
+      const name = email.split('@')[0];
+
         // If the user doesn't exist, create a new one
-        if (!user) {
-          user = new User({
-            email: profile.emails[0].value,
-            googleId: profile.id,  // Save Google ID
-            name: profile.displayName
-          });
-          await user.save();
-        }
-  
-        // Generate Access and Refresh Tokens
-        const accessToken = createAccessToken(user._id);
-        const refreshToken = createRefreshToken(user._id);
-  
-        // Update the refresh token in the database
-        user.refreshtoken = refreshToken;
-        await user.save();
-  
-        // Send the tokens to the client
-        sendRefreshToken(res, refreshToken);
-        sendAccessToken(req, res, accessToken);
-      } catch (error) {
-        res.status(500).json({
-          type: "error",
-          message: "Error during Google OAuth!",
-          error,
+      if (!user) {
+        user = new User({
+          email: email,
+            googleId: googleId,
+            name: name,
+            verified: true,
         });
+        await user.save();
       }
+  
+      // Generate Access and Refresh Tokens
+      const accessToken = createAccessToken(user._id);
+      const refreshToken = createRefreshToken(user._id);
+  
+      // Update the refresh token in the database
+      user.refreshtoken = refreshToken;
+      await user.save();
+
+      // console.log(user);
+  
+      // Send the tokens to the client
+      sendRefreshToken(res, refreshToken);
+      sendAccessToken(req, res, accessToken);
+    } catch (error) {
+      console.error("Error during Google OAuth callback:", error); // Log the error
+      res.status(500).json({
+        type: "error",
+        message: "Error during Google OAuth!",
+        error: error.message || error
+      });
     }
-  );
+  }
+);
 
 router.post("/logout", (_req, res) => {
     // clear cookies
