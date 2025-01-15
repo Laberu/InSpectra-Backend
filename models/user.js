@@ -4,18 +4,19 @@ const { Schema, model } = require("mongoose");
 const userSchema = new Schema({
     email: {
         type: String,
-        // specifies that the field is required
         required: true,
-        // specifies that the field is unique
         unique: true,
     },
     password: {
         type: String,
-        required: true,
+        required: function() {
+            // Make password required only if the user is not logging in via Google
+            return !this.googleId;
+          },
     },
+    googleId: { type: String, unique: true },
     verified: {
         type: Boolean,
-        // specifies the default value of the field
         default: false,
     },
     refreshtoken: {
