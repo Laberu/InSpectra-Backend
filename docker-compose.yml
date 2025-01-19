@@ -10,12 +10,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - MONGO_URI=mongodb://mongo:27017/test
+      - MONGO_URI=mongodb://mongo:27017/inspectra
     depends_on:
       - mongo
     volumes:
       - .:/app
     restart: always
+    command: ./wait-for-it.sh mongo:27017 -- npm start
 
   mongo:
     image: mongo:6
