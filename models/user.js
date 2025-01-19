@@ -14,7 +14,10 @@ const userSchema = new Schema({
             return !this.googleId;
           },
     },
-    googleId: { type: String, unique: true },
+    googleId: {
+        type: String,
+        required: false
+      },
     verified: {
         type: Boolean,
         default: false,
@@ -23,6 +26,8 @@ const userSchema = new Schema({
         type: String,
     },
 });
+
+userSchema.index({ googleId: 1 }, { unique: true, partialFilterExpression: { googleId: { $ne: null } } });
 
 // exporting the user model
 module.exports = model("User", userSchema);
