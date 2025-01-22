@@ -4,24 +4,30 @@ const { Schema, model } = require("mongoose");
 const userSchema = new Schema({
     email: {
         type: String,
-        // specifies that the field is required
         required: true,
-        // specifies that the field is unique
         unique: true,
     },
     password: {
         type: String,
-        required: true,
+        required: function() {
+            // Make password required only if the user is not logging in via Google
+            return !this.googleId;
+          },
     },
+    googleId: {
+        type: String,
+        required: false
+      },
     verified: {
         type: Boolean,
-        // specifies the default value of the field
         default: false,
     },
     refreshtoken: {
         type: String,
     },
 });
+
+userSchema.index({ googleId: 1 }, { unique: true, partialFilterExpression: { googleId: { $ne: null } } });
 
 // exporting the user model
 module.exports = model("User", userSchema);

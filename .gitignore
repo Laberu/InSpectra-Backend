@@ -61,7 +61,7 @@ dist/
 
 # Gatsby.js build output
 .cache/
-public/
+# public/
 
 # Serverless deployment artifacts
 .serverless/

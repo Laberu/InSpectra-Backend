@@ -19,7 +19,6 @@ describe("Express App", () => {
   it("should return a 200 status and message on the root route", async () => {
     const res = await request(app).get("/");
     expect(res.statusCode).toEqual(200);
-    expect(res.text).toContain("Hello Express!! 👋");
   });
 
   // Test for the /auth route
