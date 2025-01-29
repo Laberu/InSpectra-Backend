@@ -26,6 +26,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: InSpectra-Auth/package-lock.json
     - run:  |
         cd InSpectra-Auth  
         npm ci
