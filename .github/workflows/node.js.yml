@@ -26,10 +26,16 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
+    - run:  |
+        cd InSpectra-Auth  
+        npm ci
+    - run:  |
+        cd InSpectra-Auth
+        npm run build --if-present
     - name: Run Tests
-      run: npm test -- --testPathIgnorePatterns=auth.test.js
+      run:  |
+        cd InSpectra-Auth
+        npm test -- --testPathIgnorePatterns=auth.test.js
       env:
         GOOGLE_CLIENT_ID: 'test-client-id'
         GOOGLE_CLIENT_SECRET: 'test-client-secret'
