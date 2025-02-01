@@ -27,5 +27,17 @@ services:
       - mongo_data:/data/db
     restart: always
 
+  inspectra-storage:
+    build:
+      context: ./inspectra-storage
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./inspectra-storage:/app
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+
 volumes:
   mongo_data:
