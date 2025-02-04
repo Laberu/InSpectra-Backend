@@ -92,7 +92,7 @@ router.post("/signin", async (req, res) => {
     
         // 5. send the response
         sendRefreshToken(res, refreshToken);
-        sendAccessToken(req, res, accessToken);
+        sendAccessToken(req, res, accessToken, user.email, user.id);
     } catch (error) {
         res.status(500).json({
             type: "error",
@@ -122,9 +122,8 @@ router.get('/google/callback',
       if (!user) {
         user = new User({
           email: email,
-            googleId: googleId,
-            name: name,
-            verified: true,
+          googleId: googleId,
+          verified: true,
         });
         await user.save();
       }
@@ -132,7 +131,7 @@ router.get('/google/callback',
       // Generate Access and Refresh Tokens
       const accessToken = createAccessToken(user._id);
       const refreshToken = createRefreshToken(user._id);
-  
+
       // Update the refresh token in the database
       user.refreshtoken = refreshToken;
       await user.save();
@@ -140,8 +139,11 @@ router.get('/google/callback',
       // console.log(user);
   
       // Send the tokens to the client
-      sendRefreshToken(res, refreshToken);
-      sendAccessToken(req, res, accessToken);
+      // sendRefreshToken(res, refreshToken);
+      // sendAccessToken(req, res, accessToken);
+
+      return res.redirect(`http://localhost:3000/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+
     } catch (error) {
       console.error("Error during Google OAuth callback:", error); // Log the error
       res.status(500).json({

@@ -37,7 +37,13 @@ app.use(passport.session()); // Important: This is required to use sessions with
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
-app.use("/", indexRouter);
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 app.use("/auth", authRouter);
 
 const port = process.env.PORT || 3000;
