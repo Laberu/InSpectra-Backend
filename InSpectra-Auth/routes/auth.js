@@ -90,9 +90,16 @@ router.post("/signin", async (req, res) => {
         user.refreshtoken = refreshToken;
         await user.save();
     
-        // 5. send the response
+        // 5. send the cookies for another apps
+        res.cookie("accesstoken", accessToken, { httpOnly: true, secure: false, sameSite: "None" });
+        res.cookie("refreshtoken", refreshToken, { httpOnly: true, secure: true, sameSite: "None" });
+        res.cookie("email", email, { httpOnly: true, secure: true, sameSite: "None" });
+        res.cookie("userid", user._id.toString(), { httpOnly: true, secure: true, sameSite: "None" });
+
+        // 6. send the response
         sendRefreshToken(res, refreshToken);
         sendAccessToken(req, res, accessToken, user.email, user.id);
+
     } catch (error) {
         res.status(500).json({
             type: "error",

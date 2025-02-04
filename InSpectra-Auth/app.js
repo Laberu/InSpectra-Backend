@@ -7,6 +7,7 @@ const authRouter = require("./routes/auth.js");
 const mongoose = require("mongoose");
 const passport = require('passport');
 const path = require("path");
+const cors = require("cors");
 
 // Connecting to the database
 mongoose
@@ -17,12 +18,20 @@ mongoose
 
 const app = express();
 
+app.use(cors({
+  origin: "http://localhost:3001",
+  credentials: true  // Allows cookies to be sent with requests
+}));
+
 // Session middleware setup
 app.use(session({
   secret: process.env.SESSION_SECRET || "your_secret_key",
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // If you're using HTTPS, set this to true
+  cookie: { 
+    secure: false,
+    sameSite: "lax",
+  } // If you're using HTTPS, set this to true
 }));
 
 app.use(express.json());
@@ -42,6 +51,15 @@ app.get("/", (req, res) => {
 });
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+app.get("/get-user", (req, res) => {
+  if (!req.cookies.email) {
+      return res.status(401).json({ message: "No user found" });
+  }
+  res.json({
+      email: req.cookies.email,
+      userid: req.cookies.userid
+  });
 });
 
 app.use("/auth", authRouter);
