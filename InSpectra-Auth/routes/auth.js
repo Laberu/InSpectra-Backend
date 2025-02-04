@@ -123,9 +123,8 @@ router.get('/google/callback',
       const { email, googleId } = req.user;      
 
       let user = await User.findOne({ googleId });
-      const name = email.split('@')[0];
 
-        // If the user doesn't exist, create a new one
+      // If the user doesn't exist, create a new one
       if (!user) {
         user = new User({
           email: email,
@@ -138,6 +137,11 @@ router.get('/google/callback',
       // Generate Access and Refresh Tokens
       const accessToken = createAccessToken(user._id);
       const refreshToken = createRefreshToken(user._id);
+
+      res.cookie("accesstoken", accessToken, { httpOnly: true, secure: false, sameSite: "None" });
+      res.cookie("refreshtoken", refreshToken, { httpOnly: true, secure: true, sameSite: "None" });
+      res.cookie("email", email, { httpOnly: true, secure: true, sameSite: "None" });
+      res.cookie("userid", user._id.toString(), { httpOnly: true, secure: true, sameSite: "None" });
 
       // Update the refresh token in the database
       user.refreshtoken = refreshToken;
