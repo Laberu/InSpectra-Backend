@@ -97,3 +97,6 @@ coverage/
 
 # Test file js
 testemail.js
+
+# Uploaded files
+/InSpectra-Storage/uploads/*

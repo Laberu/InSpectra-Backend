@@ -90,9 +90,16 @@ router.post("/signin", async (req, res) => {
         user.refreshtoken = refreshToken;
         await user.save();
     
-        // 5. send the response
+        // 5. send the cookies for another apps
+        res.cookie("accesstoken", accessToken, { httpOnly: true, secure: false, sameSite: "None" });
+        res.cookie("refreshtoken", refreshToken, { httpOnly: true, secure: true, sameSite: "None" });
+        res.cookie("email", email, { httpOnly: true, secure: true, sameSite: "None" });
+        res.cookie("userid", user._id.toString(), { httpOnly: true, secure: true, sameSite: "None" });
+
+        // 6. send the response
         sendRefreshToken(res, refreshToken);
-        sendAccessToken(req, res, accessToken);
+        sendAccessToken(req, res, accessToken, user.email, user.id);
+
     } catch (error) {
         res.status(500).json({
             type: "error",
@@ -116,15 +123,13 @@ router.get('/google/callback',
       const { email, googleId } = req.user;      
 
       let user = await User.findOne({ googleId });
-      const name = email.split('@')[0];
 
-        // If the user doesn't exist, create a new one
+      // If the user doesn't exist, create a new one
       if (!user) {
         user = new User({
           email: email,
-            googleId: googleId,
-            name: name,
-            verified: true,
+          googleId: googleId,
+          verified: true,
         });
         await user.save();
       }
@@ -132,7 +137,12 @@ router.get('/google/callback',
       // Generate Access and Refresh Tokens
       const accessToken = createAccessToken(user._id);
       const refreshToken = createRefreshToken(user._id);
-  
+
+      res.cookie("accesstoken", accessToken, { httpOnly: true, secure: false, sameSite: "None" });
+      res.cookie("refreshtoken", refreshToken, { httpOnly: true, secure: true, sameSite: "None" });
+      res.cookie("email", email, { httpOnly: true, secure: true, sameSite: "None" });
+      res.cookie("userid", user._id.toString(), { httpOnly: true, secure: true, sameSite: "None" });
+
       // Update the refresh token in the database
       user.refreshtoken = refreshToken;
       await user.save();
@@ -140,8 +150,11 @@ router.get('/google/callback',
       // console.log(user);
   
       // Send the tokens to the client
-      sendRefreshToken(res, refreshToken);
-      sendAccessToken(req, res, accessToken);
+      // sendRefreshToken(res, refreshToken);
+      // sendAccessToken(req, res, accessToken);
+
+      return res.redirect(`http://localhost:3000/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+
     } catch (error) {
       console.error("Error during Google OAuth callback:", error); // Log the error
       res.status(500).json({
