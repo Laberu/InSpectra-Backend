@@ -61,11 +61,20 @@
                 if (data.files && data.files.length > 0) {
                     userFilesDiv.innerHTML = ''; // Clear previous content
                     data.files.forEach(file => {
+                        const div = document.createElement("div");
                         const img = document.createElement("img");
                         img.src = `http://localhost:3001${file.path}`;
                         img.style.maxWidth = "100px";
                         img.style.margin = "10px";
-                        userFilesDiv.appendChild(img);
+                        div.appendChild(img);
+
+                        // Create a delete button
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.textContent = "Delete";
+                        deleteBtn.addEventListener("click", () => deleteFile(file.filename));
+                        div.appendChild(deleteBtn);
+
+                        userFilesDiv.appendChild(div);
                     });
                 } else {
                     userFilesDiv.textContent = "No uploaded files found.";
@@ -73,6 +82,32 @@
             } catch (error) {
                 userFilesDiv.textContent = "Error fetching user files.";
                 console.error("Error fetching user files:", error);
+            }
+        }
+
+        // Delete a file
+        async function deleteFile(filename) {
+            const message = document.getElementById("message");
+            try {
+                const response = await fetch("http://localhost:3001/delete-file", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ filename }),
+                    credentials: "include", // Send cookies along with the request
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    message.textContent = result.message;
+                    fetchUserFiles(); // Refresh the file list after deleting
+                } else {
+                    message.textContent = "Failed to delete the file.";
+                }
+            } catch (error) {
+                message.textContent = "Error deleting file.";
+                console.error("Delete error:", error);
             }
         }
 

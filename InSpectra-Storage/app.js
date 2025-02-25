@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cookieParser());
+app.use(express.json());
 
 // Ensure the upload directory exists
 const uploadDir = path.join(__dirname, "uploads");
@@ -85,6 +86,32 @@ app.get("/user-files", (req, res) => {
         }));
 
         res.json({ files: filePaths });
+    });
+});
+
+// New route to delete a file
+app.delete("/delete-file", (req, res) => {
+    const { filename } = req.body; // This will now correctly extract filename
+    const userId = req.cookies.userid;
+
+    if (!userId || !filename) {
+        return res.status(400).json({ message: "Missing userId or filename" });
+    }
+
+    const userUploadDir = path.join(uploadDir, userId);
+    const filePath = path.join(userUploadDir, filename);
+
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+    }
+
+    // Delete the file
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            return res.status(500).json({ message: "Error deleting file" });
+        }
+        res.json({ message: "File deleted successfully" });
     });
 });
 
