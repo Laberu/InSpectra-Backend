@@ -61,15 +61,36 @@ app.post("/upload", upload.array("photos", 50), (req, res) => {
     });
 });
 
+// New route to fetch a list of uploaded files for the current user
+app.get("/user-files", (req, res) => {
+    const userId = req.cookies.userid;
+    if (!userId) {
+        return res.status(400).json({ message: "User ID not found" });
+    }
+
+    const userUploadDir = path.join(uploadDir, userId);
+    if (!fs.existsSync(userUploadDir)) {
+        return res.status(404).json({ message: "No files found for this user" });
+    }
+
+    // Read the directory to get all uploaded files
+    fs.readdir(userUploadDir, (err, files) => {
+        if (err) {
+            return res.status(500).json({ message: "Error reading the directory" });
+        }
+
+        const filePaths = files.map(file => ({
+            filename: file,
+            path: `/uploads/${userId}/${file}`,
+        }));
+
+        res.json({ files: filePaths });
+    });
+});
+
 // Serve uploaded images
 app.use("/uploads", express.static(uploadDir));
 
-app.get("/test-cookies", (req, res) => {
-    console.log("All cookies:", req.cookies); // Print all cookies to the terminal
-    res.send("Cookies printed to terminal.");
-});
-
-// Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
