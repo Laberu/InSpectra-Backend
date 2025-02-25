@@ -16,6 +16,9 @@
         <button id="uploadBtn">Upload</button>
         <p id="message"></p>
         <div id="preview"></div>
+
+        <h3>Your Uploaded Files</h3>
+        <div id="userFiles"></div> <!-- New section to display user files -->
     </div>
 
     <script>
@@ -38,10 +41,73 @@
                 
                 // Store the userId in the global variable
                 userId = data.userid;
+                fetchUserFiles(); // Fetch the user's files once the user data is loaded
             } catch (error) {
                 console.error('Error fetching user data:', error);
                 document.getElementById('userEmail').textContent = 'Failed to load email';
                 document.getElementById('userId').textContent = 'Failed to load user ID';
+            }
+        }
+
+        // Fetch the user's uploaded files
+        async function fetchUserFiles() {
+            const userFilesDiv = document.getElementById('userFiles');
+            try {
+                const response = await fetch('http://localhost:3001/user-files', {
+                    method: "GET",
+                    credentials: "include" // Ensures cookies are sent
+                });
+                const data = await response.json();
+                if (data.files && data.files.length > 0) {
+                    userFilesDiv.innerHTML = ''; // Clear previous content
+                    data.files.forEach(file => {
+                        const div = document.createElement("div");
+                        const img = document.createElement("img");
+                        img.src = `http://localhost:3001${file.path}`;
+                        img.style.maxWidth = "100px";
+                        img.style.margin = "10px";
+                        div.appendChild(img);
+
+                        // Create a delete button
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.textContent = "Delete";
+                        deleteBtn.addEventListener("click", () => deleteFile(file.filename));
+                        div.appendChild(deleteBtn);
+
+                        userFilesDiv.appendChild(div);
+                    });
+                } else {
+                    userFilesDiv.textContent = "No uploaded files found.";
+                }
+            } catch (error) {
+                userFilesDiv.textContent = "Error fetching user files.";
+                console.error("Error fetching user files:", error);
+            }
+        }
+
+        // Delete a file
+        async function deleteFile(filename) {
+            const message = document.getElementById("message");
+            try {
+                const response = await fetch("http://localhost:3001/delete-file", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ filename }),
+                    credentials: "include", // Send cookies along with the request
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    message.textContent = result.message;
+                    fetchUserFiles(); // Refresh the file list after deleting
+                } else {
+                    message.textContent = "Failed to delete the file.";
+                }
+            } catch (error) {
+                message.textContent = "Error deleting file.";
+                console.error("Delete error:", error);
             }
         }
 
@@ -80,6 +146,7 @@
                         img.src = `http://localhost:3001/uploads/${userId}/${file.filename}`;
                         preview.appendChild(img);
                     });
+                    fetchUserFiles(); // Refresh the file list after uploading new files
                 } else {
                     message.textContent = "Upload failed. Try again.";
                 }
@@ -88,7 +155,7 @@
                 console.error("Upload error:", error);
             }
         });
-        
+
         // Run the fetchUserData function when the page loads
         window.onload = fetchUserData;
     </script>
