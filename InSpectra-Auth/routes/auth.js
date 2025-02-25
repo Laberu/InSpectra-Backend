@@ -276,7 +276,7 @@ router.post("/send-password-reset-email", async (req, res) => {
         res.status(500).json({
             type: "error",
             message: "Error sending email!",
-            error,
+            error: err.message,
         });
     }
 });
