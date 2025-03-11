@@ -23,11 +23,18 @@
 
     <script>
         let userId = null; // Global variable to store userId
+        const BACKEND_URL = window.location.origin.includes('localhost') 
+        ? "http://localhost:3000" 
+        : "http://ec2-52-65-15-159.ap-southeast-2.compute.amazonaws.com:3000";
+
+        const STORAGE_URL = window.location.origin.includes('localhost') 
+        ? "http://localhost:3001" 
+        : "http://ec2-52-65-15-159.ap-southeast-2.compute.amazonaws.com:3001";
 
         // Function to get email and user ID from cookies
         async function fetchUserData() {
             try {
-                const response = await fetch('http://localhost:3000/get-user', {
+                const response = await fetch(`${BACKEND_URL}/get-user`, {
                     method: "GET",
                     credentials: "include" // Ensures cookies are sent
                 });
@@ -53,7 +60,7 @@
         async function fetchUserFiles() {
             const userFilesDiv = document.getElementById('userFiles');
             try {
-                const response = await fetch('http://localhost:3001/user-files', {
+                const response = await fetch(`${STORAGE_URL}/user-files`, {
                     method: "GET",
                     credentials: "include" // Ensures cookies are sent
                 });
@@ -63,7 +70,7 @@
                     data.files.forEach(file => {
                         const div = document.createElement("div");
                         const img = document.createElement("img");
-                        img.src = `http://localhost:3001${file.path}`;
+                        img.src = `${STORAGE_URL}${file.path}`;
                         img.style.maxWidth = "100px";
                         img.style.margin = "10px";
                         div.appendChild(img);
@@ -89,7 +96,7 @@
         async function deleteFile(filename) {
             const message = document.getElementById("message");
             try {
-                const response = await fetch("http://localhost:3001/delete-file", {
+                const response = await fetch(`${STORAGE_URL}/delete-file`, {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
@@ -129,7 +136,7 @@
 
             try {
                 message.textContent = "Uploading...";
-                const response = await fetch("http://localhost:3001/upload", {
+                const response = await fetch(`${STORAGE_URL}/upload`, {
                     method: "POST",
                     body: formData,
                     credentials: 'include' // Ensure cookies are sent with the request
@@ -143,7 +150,7 @@
                     // Now use the userId from the global variable
                     result.files.forEach(file => {
                         const img = document.createElement("img");
-                        img.src = `http://localhost:3001/uploads/${userId}/${file.filename}`;
+                        img.src = `${STORAGE_URL}/uploads/${userId}/${file.filename}`;
                         preview.appendChild(img);
                     });
                     fetchUserFiles(); // Refresh the file list after uploading new files
