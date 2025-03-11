@@ -18,10 +18,17 @@ mongoose
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:3001",
-  credentials: true  // Allows cookies to be sent with requests
-}));
+if (process.env.PRODUCTION === 'True') {
+  app.use(cors({
+    origin: process.env.CLIENT_ORIGIN_PRODUCTION,
+    credentials: true 
+  }));
+} else {
+  app.use(cors({
+    origin: process.env.CLIENT_ORIGIN_LOCAL,
+    credentials: true
+  }));
+}
 
 // Session middleware setup
 app.use(session({
