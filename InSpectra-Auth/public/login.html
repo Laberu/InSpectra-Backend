@@ -86,8 +86,10 @@
   </div>
 
   <script>
-    // Backend URL (change this if your backend is running on a different port)
-    const BACKEND_URL = "http://localhost:3000";
+    const BACKEND_URL = window.location.origin.includes('localhost') 
+    ? "http://localhost:3000" 
+    : "https://api.yourdomain.com";
+
 
     // Signup Form
     const signupForm = document.getElementById('signup-form');
