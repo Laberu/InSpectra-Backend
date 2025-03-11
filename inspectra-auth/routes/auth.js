@@ -152,8 +152,11 @@ router.get('/google/callback',
       // Send the tokens to the client
       // sendRefreshToken(res, refreshToken);
       // sendAccessToken(req, res, accessToken);
-
-      return res.redirect(`http://localhost:3000/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+      if (process.env.PRODUCTION === 'True') {
+        return res.redirect(`${process.env.CLIENT_URL_PRD}/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+      } else {
+        return res.redirect(`${process.env.CLIENT_URL_LOCAL}/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+      }
 
     } catch (error) {
       console.error("Error during Google OAuth callback:", error); // Log the error
