@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
   origin: process.env.PRODUCTION === 'True' // Front end URL
@@ -16,23 +17,6 @@ app.use(cors({
     : process.env.CLIENT_ORIGIN_LOCAL,
   credentials: true,
 }));
-
-// Route to set a user cookie (for example, after login or authentication)
-app.post("/set-user-cookie", (req, res) => {
-    const userId = req.body.userId; // Assuming you get userId from the request body
-
-    if (!userId) {
-        return res.status(400).json({ message: "User ID is required" });
-    }
-
-    res.cookie('userid', userId, {
-        httpOnly: true, // Security to prevent JavaScript access
-        secure: process.env.NODE_ENV === 'production', // Only for HTTPS in production
-        sameSite: 'None' // Allow cross-origin cookie sharing
-    });
-
-    res.json({ message: 'User cookie set successfully!' });
-});
 
 // Ensure the upload directory exists
 const uploadDir = path.join(__dirname, "uploads");
@@ -43,7 +27,7 @@ if (!fs.existsSync(uploadDir)) {
 // Multer configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {        
-        const userId = req.cookies.userid;
+        const userId = req.body.userId;  // Get userId from the request body
         
         if (!userId) {
             return cb(new Error('User ID not found'), null);
@@ -71,14 +55,19 @@ app.use(express.static("public"));
 
 // Upload API
 app.post("/upload", upload.array("photos", 50), (req, res) => {
+    const userId = req.body.userId;  // Get userId from request body
+
+    if (!userId) {
+        return res.status(400).json({ message: "User ID not found" });
+    }
+
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const userId = req.cookies.userid; // Assuming userId is stored in cookies
     const files = req.files.map(file => ({
         filename: file.filename,
-        path: `/uploads/${userId}/${file.filename}`, // Updated path to include userId
+        path: `/uploads/${userId}/${file.filename}`, // Include userId in the path
     }));
 
     res.json({
@@ -89,7 +78,8 @@ app.post("/upload", upload.array("photos", 50), (req, res) => {
 
 // New route to fetch a list of uploaded files for the current user
 app.get("/user-files", (req, res) => {
-    const userId = req.cookies.userid;
+    const userId = req.headers["user-id"];  // Get userId from header
+
     if (!userId) {
         return res.status(400).json({ message: "User ID not found" });
     }
@@ -116,8 +106,7 @@ app.get("/user-files", (req, res) => {
 
 // New route to delete a file
 app.delete("/delete-file", (req, res) => {
-    const { filename } = req.body; // This will now correctly extract filename
-    const userId = req.cookies.userid;
+    const { userId, filename } = req.body;  // Get userId and filename from request body
 
     if (!userId || !filename) {
         return res.status(400).json({ message: "Missing userId or filename" });
