@@ -25,11 +25,11 @@
         let userId = null; // Global variable to store userId
         const BACKEND_URL = window.location.origin.includes('localhost') 
         ? "http://localhost:3000" 
-        : "http://ec2-52-65-15-159.ap-southeast-2.compute.amazonaws.com:3000";
+        : "https://auth.inspectra.site";
 
         const STORAGE_URL = window.location.origin.includes('localhost') 
         ? "http://localhost:3001" 
-        : "http://ec2-52-65-15-159.ap-southeast-2.compute.amazonaws.com:3001";
+        : "https://storage.inspectra.site";
 
         // Function to get email and user ID from cookies
         async function fetchUserData() {
