@@ -10,35 +10,37 @@ const path = require("path");
 const cors = require("cors");
 
 // Connecting to the database
-mongoose
-  .connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connection is established successfully! 🎉");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
   });
 
 const app = express();
 
-if (process.env.PRODUCTION === 'True') {
-  app.use(cors({
-    origin: process.env.CLIENT_ORIGIN_PRODUCTION,
-    credentials: true 
-  }));
-} else {
-  app.use(cors({
-    origin: process.env.CLIENT_ORIGIN_LOCAL,
-    credentials: true
-  }));
-}
+// Trust proxy for secure cookies (important for AWS load balancers or reverse proxies)
+app.set('trust proxy', 1);
+
+// CORS setup
+app.use(cors({
+  origin: process.env.PRODUCTION === 'True' 
+    ? process.env.CLIENT_ORIGIN_PRODUCTION 
+    : process.env.CLIENT_ORIGIN_LOCAL,
+  credentials: true,
+}));
 
 // Session middleware setup
 app.use(session({
   secret: process.env.SESSION_SECRET || "your_secret_key",
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false, // Only save session if something is stored
   cookie: { 
-    secure: false,
-    sameSite: "lax",
-  } // If you're using HTTPS, set this to true
+    secure: process.env.PRODUCTION === 'True', // Use secure cookies in production
+    httpOnly: true,                          // Prevent access via JavaScript
+    sameSite: process.env.PRODUCTION === 'True' ? "None" : "Lax", 
+  }
 }));
 
 app.use(express.json());
@@ -47,7 +49,7 @@ app.use(cookieParser());
 
 // Initialize Passport and session handling
 app.use(passport.initialize());
-app.use(passport.session()); // Important: This is required to use sessions with Passport
+app.use(passport.session());
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -56,22 +58,25 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+
 app.get("/get-user", (req, res) => {
   if (!req.cookies.email) {
-      return res.status(401).json({ message: "No user found" });
+    return res.status(401).json({ message: "No user found" });
   }
   res.json({
-      email: req.cookies.email,
-      userid: req.cookies.userid
+    email: req.cookies.email,
+    userid: req.cookies.userid
   });
 });
 
 app.use("/auth", authRouter);
 
+// Start server
 const port = process.env.PORT || 3000;
-app.listen(port, function () {
+app.listen(port, () => {
   console.log(`🚀 Listening on http://localhost:${port}`);
 });
