@@ -17,10 +17,21 @@ app.use(cors({
   credentials: true,
 }));
 
-res.cookie('userid', userId, {
-    httpOnly: true, // Security to prevent JavaScript access
-    secure: process.env.NODE_ENV === 'production', // Only for HTTPS in production
-    sameSite: 'None' // Allow cross-origin cookie sharing
+// Route to set a user cookie (for example, after login or authentication)
+app.post("/set-user-cookie", (req, res) => {
+    const userId = req.body.userId; // Assuming you get userId from the request body
+
+    if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+    }
+
+    res.cookie('userid', userId, {
+        httpOnly: true, // Security to prevent JavaScript access
+        secure: process.env.NODE_ENV === 'production', // Only for HTTPS in production
+        sameSite: 'None' // Allow cross-origin cookie sharing
+    });
+
+    res.json({ message: 'User cookie set successfully!' });
 });
 
 // Ensure the upload directory exists
@@ -57,6 +68,7 @@ const upload = multer({
 
 // Serve frontend files
 app.use(express.static("public"));
+
 // Upload API
 app.post("/upload", upload.array("photos", 50), (req, res) => {
     if (!req.files || req.files.length === 0) {
