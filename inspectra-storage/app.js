@@ -17,6 +17,12 @@ app.use(cors({
   credentials: true,
 }));
 
+res.cookie('userid', userId, {
+    httpOnly: true, // Security to prevent JavaScript access
+    secure: process.env.NODE_ENV === 'production', // Only for HTTPS in production
+    sameSite: 'None' // Allow cross-origin cookie sharing
+});
+
 // Ensure the upload directory exists
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
