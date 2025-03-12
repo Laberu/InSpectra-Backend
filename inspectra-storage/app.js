@@ -3,12 +3,19 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const cookieParser = require("cookie-parser");
-
+const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cookieParser());
 app.use(express.json());
+
+app.use(cors({
+  origin: process.env.PRODUCTION === 'True' // Front end URL
+    ? process.env.CLIENT_ORIGIN_PRODUCTION 
+    : process.env.CLIENT_ORIGIN_LOCAL,
+  credentials: true,
+}));
 
 // Ensure the upload directory exists
 const uploadDir = path.join(__dirname, "uploads");
