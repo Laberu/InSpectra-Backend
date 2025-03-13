@@ -1,75 +1,45 @@
 const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const mongoose = require("mongoose");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const fs = require("fs");
+const path = require("path");
+
+const projectRoutes = require("./routes/project");
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
+app.use(express.json());
+app.use(cors());
 app.use(cookieParser());
 
-// Ensure the upload directory exists
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure the uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Multer configuration
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {        
-        const userId = req.cookies.userid;
-        
-        if (!userId) {
-            return cb(new Error('User ID not found'), null);
-        }
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(uploadsDir));
 
-        const userUploadDir = path.join(uploadDir, userId);
-        if (!fs.existsSync(userUploadDir)) {
-            fs.mkdirSync(userUploadDir, { recursive: true });
-        }
+// Connect to MongoDB using your environment variable MONGO_URI
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
-        cb(null, userUploadDir); // Upload to the user's specific folder
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname);
-    },
+// Mount the project routes
+app.use("/projects", projectRoutes);
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
-});
-
-// Serve frontend files
-app.use(express.static("public"));
-// Upload API
-app.post("/upload", upload.array("photos", 50), (req, res) => {
-    if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: "No files uploaded" });
-    }
-
-    const userId = req.cookies.userid; // Assuming userId is stored in cookies
-    const files = req.files.map(file => ({
-        filename: file.filename,
-        path: `/uploads/${userId}/${file.filename}`, // Updated path to include userId
-    }));
-
-    res.json({
-        message: "Files uploaded successfully!",
-        files: files,
-    });
-});
-
-// Serve uploaded images
-app.use("/uploads", express.static(uploadDir));
-
-app.get("/test-cookies", (req, res) => {
-    console.log("All cookies:", req.cookies); // Print all cookies to the terminal
-    res.send("Cookies printed to terminal.");
-});
-
-// Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
