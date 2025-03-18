@@ -109,22 +109,26 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// NEW endpoint: Get project details and provide a download URL for the zip file
+// GET endpoint that returns the project zip file as a download
 router.get("/:id/download", async (req, res) => {
-  try {
-    const project = await Project.findById(req.params.id);
-    if (!project || !project.outputFile) {
-      return res.status(404).json({ error: "Project or zip file not found" });
+    try {
+      const project = await Project.findById(req.params.id);
+      if (!project || !project.outputFile) {
+        return res.status(404).json({ error: "Project or zip file not found" });
+      }
+      // Resolve the file path
+      const filePath = path.resolve(project.outputFile);
+      // Use res.download() to send the file
+      res.download(filePath, err => {
+        if (err) {
+          console.error("Error sending file:", err);
+          // If an error occurs while sending, you can send a JSON error or handle it accordingly.
+          res.status(500).json({ error: err.message });
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    // Construct the download URL based on the server host and file path
-    const downloadUrl = `${req.protocol}://${req.get("host")}/${project.outputFile}`;
-    res.json({
-      project,
-      downloadUrl,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  });
 
 module.exports = router;
