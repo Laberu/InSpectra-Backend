@@ -335,4 +335,14 @@ router.post("/reset-password/:id/:token", async (req, res) => {
     }
 });
 
+router.post("/get-user", (req, res) => {
+  const { email, userid } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  res.json({ email, userid });
+});
+
+
+
 module.exports = router;

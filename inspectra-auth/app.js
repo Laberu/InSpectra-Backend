@@ -63,16 +63,6 @@ app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-app.get("/get-user", (req, res) => {
-  if (!req.cookies.email) {
-    return res.status(401).json({ message: "No user found" });
-  }
-  res.json({
-    email: req.cookies.email,
-    userid: req.cookies.userid
-  });
-});
-
 app.use("/auth", authRouter);
 
 // Start server
