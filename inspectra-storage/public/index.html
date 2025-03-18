@@ -34,7 +34,7 @@
         // Function to get email and user ID from cookies
         async function fetchUserData() {
             try {
-                const response = await fetch(`${BACKEND_URL}/get-user`, {
+                const response = await fetch(`${BACKEND_URL}/auth/get-user`, {
                     method: "GET",
                     credentials: "include" // Ensures cookies are sent
                 });
