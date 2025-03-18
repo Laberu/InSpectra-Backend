@@ -171,7 +171,11 @@ router.get('/google/callback',
 
 router.post("/logout", (_req, res) => {
     // clear cookies
-    res.clearCookie("refreshtoken");
+    res.clearCookie("refreshtoken", { httpOnly: true, secure: true, sameSite: "None" });
+    res.clearCookie("accesstoken", { httpOnly: true, secure: true, sameSite: "None" });
+    res.clearCookie("email", { httpOnly: true, secure: true, sameSite: "None" });
+    res.clearCookie("userid", { httpOnly: true, secure: true, sameSite: "None" });
+    
     return res.json({
       message: "Logged out successfully! 🤗",
       type: "success",
@@ -335,14 +339,16 @@ router.post("/reset-password/:id/:token", async (req, res) => {
     }
 });
 
-router.post("/get-user", (req, res) => {
-  const { email, userid } = req.body;
+router.get("/get-user", (req, res) => {
+  const email = req.cookies.email;
+  const userid = req.cookies.userid;
+
   if (!email) {
-    return res.status(400).json({ message: "Email is required" });
+    return res.status(401).json({ message: "No user found" });
   }
+
   res.json({ email, userid });
 });
-
 
 
 module.exports = router;
