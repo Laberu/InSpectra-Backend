@@ -38,6 +38,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - MONGO_URI=mongodb://mongo:27017/inspectra
+    depends_on:
+      - mongo
+    restart: always
 
 volumes:
   mongo_data:
