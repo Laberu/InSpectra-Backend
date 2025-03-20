@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Photos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2 id="welcomeMessage">Welcome</h2>
+        <p id="userEmail">Loading email...</p>
+        <p id="userId">Loading user ID...</p>
+
+        <input type="file" id="fileInput" multiple>
+        <button id="uploadBtn">Upload</button>
+        <p id="message"></p>
+        <div id="preview"></div>
+
+        <h3>Your Uploaded Files</h3>
+        <div id="userFiles"></div> <!-- New section to display user files -->
+    </div>
+
+    <script>
+        let userId = null; // Global variable to store userId
+        const BACKEND_URL = window.location.origin.includes('localhost') 
+        ? "http://localhost:3000" 
+        : "https://auth.inspectra.site";
+
+        const STORAGE_URL = window.location.origin.includes('localhost') 
+        ? "http://localhost:3001" 
+        : "https://storage.inspectra.site";
+
+        // Function to get email and user ID from cookies
+        async function fetchUserData() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/auth/get-user`, {
+                    method: "GET",
+                    credentials: "include" // Ensures cookies are sent
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                
+                document.getElementById('userEmail').textContent = data.email ? `Email: ${data.email}` : 'Email not found';
+                document.getElementById('userId').textContent = data.userid ? `User ID: ${data.userid}` : 'User ID not found';
+                
+                // Store the userId in the global variable
+                userId = data.userid;
+                fetchUserFiles(); // Fetch the user's files once the user data is loaded
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                document.getElementById('userEmail').textContent = 'Failed to load email';
+                document.getElementById('userId').textContent = 'Failed to load user ID';
+            }
+        }
+
+        // Fetch the user's uploaded files
+        async function fetchUserFiles() {
+            const userFilesDiv = document.getElementById('userFiles');
+            try {
+                const response = await fetch(`${STORAGE_URL}/user-files`, {
+                    method: "GET",
+                    headers: {
+                        "User-ID": userId // Send userId as header
+                    },
+                    credentials: "include" // Ensures cookies are sent
+                });
+                const data = await response.json();
+                if (data.files && data.files.length > 0) {
+                    userFilesDiv.innerHTML = ''; // Clear previous content
+                    data.files.forEach(file => {
+                        const div = document.createElement("div");
+                        const img = document.createElement("img");
+                        img.src = `${STORAGE_URL}${file.path}`;
+                        img.style.maxWidth = "100px";
+                        img.style.margin = "10px";
+                        div.appendChild(img);
+
+                        // Create a delete button
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.textContent = "Delete";
+                        deleteBtn.addEventListener("click", () => deleteFile(file.filename));
+                        div.appendChild(deleteBtn);
+
+                        userFilesDiv.appendChild(div);
+                    });
+                } else {
+                    userFilesDiv.textContent = "No uploaded files found.";
+                }
+            } catch (error) {
+                userFilesDiv.textContent = "Error fetching user files.";
+                console.error("Error fetching user files:", error);
+            }
+        }
+
+        // Delete a file
+        async function deleteFile(filename) {
+            const message = document.getElementById("message");
+            try {
+                const response = await fetch(`${STORAGE_URL}/delete-file`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "User-ID": userId // Send userId as header
+                    },
+                    body: JSON.stringify({ filename }),
+                    credentials: "include", // Send cookies along with the request
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    message.textContent = result.message;
+                    fetchUserFiles(); // Refresh the file list after deleting
+                } else {
+                    message.textContent = "Failed to delete the file.";
+                }
+            } catch (error) {
+                message.textContent = "Error deleting file.";
+                console.error("Delete error:", error);
+            }
+        }
+
+        // Add the event listener for file upload
+        document.getElementById("uploadBtn").addEventListener("click", async () => {
+            const fileInput = document.getElementById("fileInput");
+            const message = document.getElementById("message");
+            const preview = document.getElementById("preview");
+
+            if (fileInput.files.length === 0) {
+                message.textContent = "Please select files to upload.";
+                return;
+            }
+
+            const formData = new FormData();
+            // Add userId to the FormData
+            formData.append("userId", userId); // Send userId as part of FormData
+
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append("photos", fileInput.files[i]);
+            }
+
+            try {
+                message.textContent = "Uploading...";
+                const response = await fetch(`${STORAGE_URL}/upload`, {
+                    method: "POST",
+                    body: formData,
+                    credentials: 'include' // Ensure cookies are sent with the request
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    message.textContent = "Upload successful!";
+                    preview.innerHTML = "";
+
+                    // Now use the userId from the global variable
+                    result.files.forEach(file => {
+                        const img = document.createElement("img");
+                        img.src = `${STORAGE_URL}/uploads/${userId}/${file.filename}`;
+                        preview.appendChild(img);
+                    });
+                    fetchUserFiles(); // Refresh the file list after uploading new files
+                } else {
+                    message.textContent = "Upload failed. Try again.";
+                }
+            } catch (error) {
+                message.textContent = "Error uploading files.";
+                console.error("Upload error:", error);
+            }
+        });
+
+        // Run the fetchUserData function when the page loads
+        window.onload = fetchUserData;
+    </script>
+</body>
+</html>

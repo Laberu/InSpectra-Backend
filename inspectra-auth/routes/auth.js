@@ -152,8 +152,11 @@ router.get('/google/callback',
       // Send the tokens to the client
       // sendRefreshToken(res, refreshToken);
       // sendAccessToken(req, res, accessToken);
-
-      return res.redirect(`http://localhost:3000/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+      if (process.env.PRODUCTION === 'True') {
+        return res.redirect(`${process.env.CLIENT_URL_PRODUCTION}/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+      } else {
+        return res.redirect(`${process.env.CLIENT_URL_LOCAL}/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+      }
 
     } catch (error) {
       console.error("Error during Google OAuth callback:", error); // Log the error
@@ -168,7 +171,11 @@ router.get('/google/callback',
 
 router.post("/logout", (_req, res) => {
     // clear cookies
-    res.clearCookie("refreshtoken");
+    res.clearCookie("refreshtoken", { httpOnly: true, secure: true, sameSite: "None" });
+    res.clearCookie("accesstoken", { httpOnly: true, secure: true, sameSite: "None" });
+    res.clearCookie("email", { httpOnly: true, secure: true, sameSite: "None" });
+    res.clearCookie("userid", { httpOnly: true, secure: true, sameSite: "None" });
+    
     return res.json({
       message: "Logged out successfully! 🤗",
       type: "success",
@@ -276,7 +283,7 @@ router.post("/send-password-reset-email", async (req, res) => {
         res.status(500).json({
             type: "error",
             message: "Error sending email!",
-            error,
+            error: err.message,
         });
     }
 });
@@ -331,5 +338,17 @@ router.post("/reset-password/:id/:token", async (req, res) => {
         });
     }
 });
+
+router.get("/get-user", (req, res) => {
+  const email = req.cookies.email;
+  const userid = req.cookies.userid;
+
+  if (!email) {
+    return res.status(401).json({ message: "No user found" });
+  }
+
+  res.json({ email, userid });
+});
+
 
 module.exports = router;

@@ -26,16 +26,16 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        cache-dependency-path: InSpectra-Auth/package-lock.json
+        cache-dependency-path: inspectra-auth/package-lock.json
     - run:  |
-        cd InSpectra-Auth  
+        cd inspectra-auth  
         npm ci
     - run:  |
-        cd InSpectra-Auth
+        cd inspectra-auth
         npm run build --if-present
     - name: Run Tests
       run:  |
-        cd InSpectra-Auth
+        cd inspectra-auth
         npm test -- --testPathIgnorePatterns=auth.test.js
       env:
         GOOGLE_CLIENT_ID: 'test-client-id'
