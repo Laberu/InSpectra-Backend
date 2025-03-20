@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  inspectra-storage:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - CLIENT_URL=localhost:4000/auth
+      - MONGO_URI=mongodb://mongo:27017/test
+      - ACCESS_TOKEN_SECRET=your_access_token_secret
+      - REFRESH_TOKEN_SECRET=your_refresh_token_secret
+      - PASSWORD_RESET_SECRET=your_password_reset_secret
+      - EMAIL_USER=your_email_user
+      - EMAIL_PASSWORD=your_email_password
+      - GOOGLE_CLIENT_ID=your_google_client_id
+      - GOOGLE_CLIENT_SECRET=your_google_client_secret
+      - GOOGLE_CALLBACK_URL=your_google_callback_url
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
