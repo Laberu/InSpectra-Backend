@@ -2,8 +2,7 @@
 Backend for InSpectra
 
 # What is InSpectra
-InSpectra is a tool developed to simplify the process of object detection in videos, making it accessible to a wider audience. 
-It aims to address the challenges users face in identifying and tracking objects within videos, offering a user-friendly solution with robust detection capabilities.
+InSpectra is an AI-driven Web Application designed for efficient and accurate damage detection in 3D models of infrastructure. By leveraging advancements in integrated deep learning technologies, the system addresses the challenges of inspecting large-scale structures.
 
 ## To set up this project.
 Run as locally
