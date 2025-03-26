@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 // Configure multer middleware with file filtering for zip files only
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5GB
   fileFilter: (req, file, cb) => {
     if (
       file.mimetype === "application/zip" ||
