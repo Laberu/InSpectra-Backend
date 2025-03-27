@@ -1,7 +1,12 @@
 const { createTransport } = require("nodemailer");
 
-const createPasswordResetUrl = (id, token) =>
-  `${process.env.CLIENT_URL}/reset-password/${id}/${token}`;
+const createPasswordResetUrl = (id, token) => {
+    const baseUrl = process.env.PRODUCTION === "True" 
+      ? process.env.CLIENT_URL_PRODUCTION 
+      : process.env.CLIENT_URL_LOCAL;
+  
+    return `${baseUrl}/reset-password/${id}/${token}`;
+  };
 
 const transporter = createTransport({
     host: 'smtp.gmail.com',
