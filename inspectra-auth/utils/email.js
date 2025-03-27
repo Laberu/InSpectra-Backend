@@ -1,7 +1,12 @@
 const { createTransport } = require("nodemailer");
 
-const createPasswordResetUrl = (id, token) =>
-  `${process.env.CLIENT_URL}/reset-password/${id}/${token}`;
+const createPasswordResetUrl = (id, token) => {
+    const baseUrl = process.env.PRODUCTION === "True" 
+      ? process.env.CLIENT_URL_PRODUCTION 
+      : process.env.CLIENT_URL_LOCAL;
+  
+    return `${baseUrl}/auth/reset-password/${id}/${token}`;
+  };
 
 const transporter = createTransport({
     host: 'smtp.gmail.com',
@@ -30,7 +35,7 @@ const passwordResetTemplate = (user, url) => {
             <small>If you haven't requested password reset, please ignore this email</small>
             <br /><br />
             <p>Thanks,</p>
-            <p>Laberu Team</p>`,
+            <p>InSpectra Team</p>`,
     };
 };
   
@@ -44,7 +49,7 @@ const passwordResetConfirmationTemplate = (user) => {
             <p>You've successfully updated your password for your account <${email}>. </p>
             <br /><br />
             <p>Thanks,</p>
-            <p>Laberu Team</p>`,
+            <p>InSpectra Team</p>`,
     };
   };
   
