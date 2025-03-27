@@ -6,6 +6,10 @@ const ProjectSchema = new mongoose.Schema({
     ref: "User", 
     required: true 
   },
+  jobId: {
+    type: String,
+    required: true
+  },
   projectName: { 
     type: String, 
     required: true 
