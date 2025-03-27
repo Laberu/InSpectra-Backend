@@ -5,7 +5,7 @@ const createPasswordResetUrl = (id, token) => {
       ? process.env.CLIENT_URL_PRODUCTION 
       : process.env.CLIENT_URL_LOCAL;
   
-    return `${baseUrl}/reset-password/${id}/${token}`;
+    return `${baseUrl}/auth/reset-password/${id}/${token}`;
   };
 
 const transporter = createTransport({
