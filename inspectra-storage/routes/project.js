@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 // Configure multer middleware with file filtering for zip files only
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5GB
   fileFilter: (req, file, cb) => {
     if (
       file.mimetype === "application/zip" ||
@@ -35,9 +35,9 @@ const upload = multer({
 // CREATE a new project with a zip file upload
 router.post("/", upload.single("zipFile"), async (req, res) => {
   try {
-    const { userId, projectName, description } = req.body;
+    const { userId, jobId, projectName, description } = req.body;
     const outputFile = req.file ? req.file.path : null;
-    const newProject = new Project({ userId, projectName, description, outputFile });
+    const newProject = new Project({ userId, jobId, projectName, description, outputFile });
     const savedProject = await newProject.save();
     res.status(201).json(savedProject);
   } catch (error) {
@@ -130,5 +130,37 @@ router.get("/:id/download", async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // GET endpoint to download the oldest zip file for a given jobId
+router.get("/download/job/:jobId", async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Find all projects with the same jobId
+    const projects = await Project.find({ jobId }).sort({ createdAt: 1 });
+
+    if (!projects || projects.length === 0) {
+      return res.status(404).json({ error: "No project found with this jobId" });
+    }
+
+    const oldestProject = projects[0];
+
+    if (!oldestProject.outputFile) {
+      return res.status(404).json({ error: "Output file not found for this project" });
+    }
+
+    const filePath = path.resolve(oldestProject.outputFile);
+    res.download(filePath, err => {
+      if (err) {
+        console.error("Error sending file:", err);
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 module.exports = router;
