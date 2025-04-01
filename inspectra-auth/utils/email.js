@@ -5,7 +5,7 @@ const createPasswordResetUrl = (id, token) => {
       ? process.env.CLIENT_URL_PRODUCTION 
       : process.env.CLIENT_URL_LOCAL;
   
-    return `https://inspectra.site/auth/reset-password/${id}/${token}`;
+    return `https://inspectra.site/reset-password/${id}/${token}`;
   };
 
 const transporter = createTransport({
