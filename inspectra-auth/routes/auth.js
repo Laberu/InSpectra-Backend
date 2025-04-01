@@ -153,7 +153,7 @@ router.get('/google/callback',
       // sendRefreshToken(res, refreshToken);
       // sendAccessToken(req, res, accessToken);
       if (process.env.PRODUCTION === 'True') {
-        return res.redirect(`${process.env.FRONT_URL}/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
+        return res.redirect(`${process.env.FRONT_URL}/dashboard/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
       } else {
         return res.redirect(`${process.env.CLIENT_URL_LOCAL}/?token=${accessToken}&userid=${user._id}&email=${encodeURIComponent(email)}`);
       }
