@@ -59,7 +59,7 @@ const projectCompletionTemplate = (email, projectName) => {
         subject: `🎉 Your Project "${projectName}" is Complete!`,
         html: `
             <h2>Project Completed</h2>
-            <p>Hi ${username},</p>
+            <p>Hi there,</p>
             <p>We're excited to let you know that your project <strong>"${projectName}"</strong> has been successfully completed!</p>
             <p>You can now review the results and take the next steps.</p>
             <br />
