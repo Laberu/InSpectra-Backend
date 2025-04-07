@@ -18,6 +18,7 @@ const {
     createPasswordResetUrl,
     passwordResetTemplate,
     passwordResetConfirmationTemplate,
+    projectCompletionTemplate,
   } = require("../utils/email");
 
 
@@ -350,5 +351,23 @@ router.get("/get-user", (req, res) => {
   res.json({ email, userid });
 });
 
+router.post('/notify-project-completion', async (req, res) => {
+  try {
+      const { email, projectName } = req.body;
+
+      if (!email || !projectName) {
+          return res.status(400).json({ message: 'Email and project name are required.' });
+      }
+
+      const mailOptions = projectCompletionTemplate(email, projectName);
+
+      await transporter.sendMail(mailOptions);
+
+      res.status(200).json({ message: 'Project completion email sent successfully.' });
+  } catch (error) {
+      console.error('Error sending email:', error);
+      res.status(500).json({ message: 'Failed to send project completion email.' });
+  }
+});
 
 module.exports = router;
