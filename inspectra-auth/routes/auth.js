@@ -353,20 +353,27 @@ router.get("/get-user", (req, res) => {
 
 router.post('/notify-project-completion', async (req, res) => {
   try {
-      const { email, projectName } = req.body;
+    const { userid, projectName } = req.body;
 
-      if (!email || !projectName) {
-          return res.status(400).json({ message: 'Email and project name are required.' });
-      }
+    if (!userid || !projectName) {
+      return res.status(400).json({ message: 'User ID and project name are required.' });
+    }
 
-      const mailOptions = projectCompletionTemplate(email, projectName);
+    // Look up the user by ID
+    const user = await User.findById(userid);
 
-      await transporter.sendMail(mailOptions);
+    if (!user || !user.email) {
+      return res.status(404).json({ message: 'User not found or has no email.' });
+    }
 
-      res.status(200).json({ message: 'Project completion email sent successfully.' });
+    const mailOptions = projectCompletionTemplate(user.email, projectName);
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: 'Project completion email sent successfully.' });
   } catch (error) {
-      console.error('Error sending email:', error);
-      res.status(500).json({ message: 'Failed to send project completion email.' });
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Failed to send project completion email.' });
   }
 });
 
